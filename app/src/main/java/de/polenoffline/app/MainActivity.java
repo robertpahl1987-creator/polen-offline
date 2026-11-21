@@ -120,6 +120,17 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void hoerenAuto(String fremdLang) {
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                wartendeSprache = "auto:" + fremdLang;
+                runOnUiThread(() -> requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, MIKRO));
+                return;
+            }
+            if (gespraech != null) gespraech.hoerenAuto(fremdLang);
+            else js("window.hoerFehler && hoerFehler('tts')");
+        }
+
+        @JavascriptInterface
         public void hoerenStopp() { if (gespraech != null) gespraech.stopp(); }
 
         @JavascriptInterface
@@ -183,7 +194,10 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(req, perms, res);
         if (req != MIKRO) return;
         if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED && wartendeSprache != null) {
-            if (gespraech != null) gespraech.hoeren(wartendeSprache);
+            if (gespraech != null) {
+                if (wartendeSprache.startsWith("auto:")) gespraech.hoerenAuto(wartendeSprache.substring(5));
+                else gespraech.hoeren(wartendeSprache);
+            }
         } else js("window.hoerFehler && hoerFehler('mikrofon')");
         wartendeSprache = null;
     }

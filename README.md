@@ -1,11 +1,11 @@
-# Polen Offline 🇵🇱
+# Übersetzung App 🌐
 
-Übersetzer Deutsch ↔ Polnisch und Umrechner Złoty ↔ Euro als Android-App. Funktioniert **komplett ohne Internet**.
+Übersetzer Deutsch ↔ Polnisch und Deutsch ↔ Englisch als Android-App – funktioniert **offline und online genau gleich**.
 
-- Sprachführer mit ca. 190 Sätzen (mit Aussprache, Vorlesen, Merkliste)
-- Wort-für-Wort-Übersetzer mit eingebautem Wörterbuch
-- Umrechner Euro/Złoty, Tankrechner, Trinkgeld & Rechnung teilen
-- Zahlen auf Polnisch, Notrufnummern, Verkehrsregeln
+- 🔄 Text übersetzen (Satz-Übersetzung auf dem Handy), 📷 Texte per Foto übersetzen
+- 🎧 Gesprächsmodus mit Kopfhörer, Live-Modus und **automatischer Spracherkennung**
+- 💬 Polnisch-Sprachführer mit Aussprache, 🛒 Preisschilder scannen + Preisliste
+- 💶 Umrechner Euro/Złoty mit automatischem Kurs, automatische App-Updates
 
 ## APK herunterladen
-Bei jedem Push baut GitHub automatisch die App. Unter **Releases** die neueste `PolenOffline.apk` am Handy herunterladen und öffnen.
+https://github.com/robertpahl1987-creator/polen-offline/releases/latest/download/UebersetzungApp.apk

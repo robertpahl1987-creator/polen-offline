@@ -30,17 +30,17 @@ jobs:
         run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: APK umbenennen
-        run: cp app/build/outputs/apk/debug/app-debug.apk PolenOffline.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk UebersetzungApp.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: PolenOffline
-          path: PolenOffline.apk
+          name: UebersetzungApp
+          path: UebersetzungApp.apk
 
       - name: Als Release veröffentlichen (Download am Handy)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: Polen Offline 1.0.${{ github.run_number }}
+          name: Übersetzung App 1.0.${{ github.run_number }}
           body: APK am Handy herunterladen und öffnen, um sie zu installieren.
-          files: PolenOffline.apk
+          files: UebersetzungApp.apk

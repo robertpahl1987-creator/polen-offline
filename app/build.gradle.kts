@@ -49,6 +49,8 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
     // Satz-Übersetzung Polnisch ↔ Deutsch auf dem Handy (Sprachpaket einmalig laden, dann offline)
     implementation("com.google.mlkit:translate:17.0.3")
+    // Spracherkennung des gesprochenen Textes (welche Sprache?) – offline
+    implementation("com.google.mlkit:language-id:17.0.6")
     // FileProvider für Kamerafotos
     implementation("androidx.core:core:1.13.1")
     // Kotlin-Bibliotheken auf eine Version bringen (verhindert doppelte Klassen)

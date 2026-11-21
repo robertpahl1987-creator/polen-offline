@@ -16,6 +16,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 import org.json.JSONObject;
+import com.google.mlkit.nl.languageid.LanguageIdentification;
 
 /**
  * Gesprächsmodus: Spracherkennung → (Übersetzung in JS) → Sprachausgabe.
@@ -30,6 +31,7 @@ public class Gespraech {
     private SpeechRecognizer erkenner;
     private boolean aufGeraet = true;     // erst Erkennung direkt auf dem Gerät versuchen
     private String sprache = "de-DE";
+    private String autoFremd = null;   // gesetzt = automatische Spracherkennung (Deutsch oder diese Sprache)
     private MediaPlayer player;
 
     public Gespraech(Activity a, TextToSpeech tts, Js js) {
@@ -44,7 +46,18 @@ public class Gespraech {
     private void fertigGesprochen() { js.rufe("window.sprechenFertig && sprechenFertig()"); }
 
     // ---------------- Zuhören ----------------
+    /** Automatisch: hört auf Deutsch UND die Fremdsprache und erkennt, welche gesprochen wurde. */
+    public void hoerenAuto(String fremdLang) {
+        autoFremd = fremdLang;
+        hoerenIntern(fremdLang);
+    }
+
     public void hoeren(String lang) {
+        autoFremd = null;
+        hoerenIntern(lang);
+    }
+
+    private void hoerenIntern(String lang) {
         a.runOnUiThread(() -> {
             sprache = lang;
             stoppIntern();
@@ -67,13 +80,22 @@ public class Gespraech {
                 }
                 @Override public void onResults(Bundle b) {
                     String t = erster(b);
-                    if (t == null || t.trim().isEmpty()) js.rufe("window.hoerFehler && hoerFehler('nichts')");
-                    else js.rufe("window.hoerErgebnis && hoerErgebnis(" + JSONObject.quote(t) + ",'" + sprache + "')");
+                    if (t == null || t.trim().isEmpty()) { js.rufe("window.hoerFehler && hoerFehler('nichts')"); return; }
+                    if (autoFremd == null) { melde(t, sprache); return; }
+                    // 1) Android 14+: Erkenner meldet die gesprochene Sprache selbst
+                    String erkannt = null;
+                    if (Build.VERSION.SDK_INT >= 34) erkannt = b.getString(SpeechRecognizer.DETECTED_LANGUAGE);
+                    if (erkannt != null && !erkannt.isEmpty()) { melde(t, zuordnen(erkannt)); return; }
+                    // 2) sonst am Text erkennen (offline, ML Kit)
+                    final String text = t;
+                    LanguageIdentification.getClient().identifyLanguage(text)
+                        .addOnSuccessListener(code -> melde(text, zuordnen(code)))
+                        .addOnFailureListener(e -> melde(text, autoFremd));
                 }
                 @Override public void onError(int fehler) {
                     // Gerät kann die Sprache nicht → einmal mit der normalen Erkennung versuchen
                     if (warGeraet && (fehler == 12 || fehler == 13 || fehler == SpeechRecognizer.ERROR_CLIENT)) {
-                        aufGeraet = false; hoeren(sprache); return;
+                        aufGeraet = false; hoerenIntern(sprache); return;
                     }
                     String art;
                     switch (fehler) {
@@ -94,11 +116,33 @@ public class Gespraech {
             i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
             i.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+            if (autoFremd != null) {
+                ArrayList<String> beide = new ArrayList<>();
+                beide.add(autoFremd); beide.add("de-DE");
+                i.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"de-DE"});
+                if (Build.VERSION.SDK_INT >= 34) {
+                    i.putExtra(RecognizerIntent.EXTRA_ENABLE_LANGUAGE_DETECTION, true);
+                    i.putStringArrayListExtra(RecognizerIntent.EXTRA_LANGUAGE_DETECTION_ALLOWED_LANGUAGES, beide);
+                    i.putExtra(RecognizerIntent.EXTRA_ENABLE_LANGUAGE_SWITCH, RecognizerIntent.LANGUAGE_SWITCH_BALANCED);
+                    i.putStringArrayListExtra(RecognizerIntent.EXTRA_LANGUAGE_SWITCH_ALLOWED_LANGUAGES, beide);
+                }
+            }
             i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500);
             i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1200);
             try { erkenner.startListening(i); }
             catch (Exception e) { js.rufe("window.hoerFehler && hoerFehler('fehler')"); }
         });
+    }
+
+    private void melde(String text, String lang) {
+        js.rufe("window.hoerErgebnis && hoerErgebnis(" + JSONObject.quote(text) + ",'" + lang + "')");
+    }
+
+    /** "de", "de-DE", "pl", "en-US" … → "de-DE" oder die Fremdsprache */
+    private String zuordnen(String code) {
+        String c = code == null ? "" : code.toLowerCase();
+        if (c.startsWith("de")) return "de-DE";
+        return autoFremd != null ? autoFremd : sprache;
     }
 
     public void stopp() { a.runOnUiThread(this::stoppIntern); }

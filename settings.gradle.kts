@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PolenOffline"
+rootProject.name = "UebersetzungApp"
 include(":app")
