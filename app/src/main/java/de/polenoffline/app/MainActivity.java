@@ -28,13 +28,19 @@ public class MainActivity extends Activity {
     private long letztesUpdateCheck = 0;
     private static final int FOTO = 41, GALERIE = 42;
     private KiUebersetzer ki;
+    private Gespraech gespraech;
+    private String wartendeSprache = null;
+    private static final int MIKRO = 43;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(0xFFC8102E);
 
-        tts = new TextToSpeech(this, status -> ttsBereit = (status == TextToSpeech.SUCCESS));
+        tts = new TextToSpeech(this, status -> {
+            ttsBereit = (status == TextToSpeech.SUCCESS);
+            if (ttsBereit) runOnUiThread(() -> gespraech = new Gespraech(this, tts, this::js));
+        });
         ki = new KiUebersetzer(st -> js("window.kiStatus && kiStatus('" + st + "')"));
 
         web = new WebView(this);
@@ -100,6 +106,38 @@ public class MainActivity extends Activity {
                 js("window.kiErgebnis && kiErgebnis(" + id + "," + JSONObject.quote(ergebnis) + "," + ok + ")"));
         }
 
+        // ---------- Gesprächsmodus ----------
+        @JavascriptInterface
+        public void hoeren(String lang) {
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                wartendeSprache = lang;
+                runOnUiThread(() -> requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, MIKRO));
+                return;
+            }
+            if (gespraech != null) gespraech.hoeren(lang);
+            else js("window.hoerFehler && hoerFehler('tts')");
+        }
+
+        @JavascriptInterface
+        public void hoerenStopp() { if (gespraech != null) gespraech.stopp(); }
+
+        @JavascriptInterface
+        public void sprechen(String text, String lang, boolean lautsprecher) {
+            if (gespraech != null) gespraech.sprechen(text, lang, lautsprecher);
+            else js("window.sprechenFertig && sprechenFertig()");
+        }
+
+        @JavascriptInterface
+        public boolean kopfhoerer() { return gespraech != null && gespraech.kopfhoererDran(); }
+
+        @JavascriptInterface
+        public void sprachEinstellungen() {
+            runOnUiThread(() -> {
+                try { startActivity(new Intent("com.android.settings.TTS_SETTINGS")); }
+                catch (Exception e) { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); }
+            });
+        }
+
         @JavascriptInterface
         public void updateSuchen() { runOnUiThread(() -> updatePruefen(true)); }
 
@@ -131,6 +169,22 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             Toast.makeText(this, "Keine Kamera-App gefunden.", Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (req != MIKRO) return;
+        if (res.length > 0 && res[0] == android.content.pm.PackageManager.PERMISSION_GRANTED && wartendeSprache != null) {
+            if (gespraech != null) gespraech.hoeren(wartendeSprache);
+        } else js("window.hoerFehler && hoerFehler('mikrofon')");
+        wartendeSprache = null;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (gespraech != null) { gespraech.stopp(); js("window.gespraechPause && gespraechPause()"); }
     }
 
     @Override
@@ -206,6 +260,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (gespraech != null) gespraech.beenden();
         if (tts != null) { tts.stop(); tts.shutdown(); }
         super.onDestroy();
     }

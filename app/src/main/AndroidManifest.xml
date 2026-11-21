@@ -3,10 +3,13 @@
     <!-- Internet nur für den aktuellen Wechselkurs; alles andere läuft offline -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Gesprächsmodus: Spracherkennung -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Für automatische Updates -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <queries>
         <intent><action android:name="android.media.action.IMAGE_CAPTURE" /></intent>
+        <intent><action android:name="android.speech.RecognitionService" /></intent>
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
     </queries>
     <application
