@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
         super.onResume();
         // Beim Zurückkehren in die App erneut prüfen (höchstens alle 30 Minuten)
         if (seiteGeladen && System.currentTimeMillis() - letzterAbruf > 30 * 60 * 1000) kursHolen(false);
-        if (seiteGeladen && System.currentTimeMillis() - letztesUpdateCheck > 3 * 60 * 60 * 1000) updatePruefen(false);
+        if (seiteGeladen && System.currentTimeMillis() - letztesUpdateCheck > 10 * 60 * 1000) updatePruefen(false);
     }
 
     private File fotoDatei() {
