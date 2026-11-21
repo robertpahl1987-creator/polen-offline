@@ -200,6 +200,12 @@ nav button.an{color:var(--rot);font-weight:700}
     </table>
     <div class="hinweis">Die Betonung liegt fast immer auf der vorletzten Silbe.</div>
   </div>
+  <div class="karte" id="updKarte" style="display:none">
+    <h2>🔄 App-Version</h2>
+    <div class="ausgabe" id="updVersion" style="font-size:16px"></div>
+    <div class="hinweis" id="updStatus">Beim Öffnen sucht die App automatisch nach Updates (wenn Internet da ist).</div>
+    <button class="btn2" style="margin-top:8px" onclick="AndroidTTS.updateSuchen();$('updStatus').textContent='🔄 Suche nach Updates …'">Jetzt nach Update suchen</button>
+  </div>
   <div class="karte">
     <h2>ℹ️ So bleibt alles offline</h2>
     <div class="hinweis" style="font-size:14px">Diese Datei enthält alles in sich – keine Internetverbindung nötig. Speichere sie auf dem Handy (z. B. Ordner „Downloads“) und öffne sie im Browser. Tipp: Im Chrome-Menü „Zum Startbildschirm hinzufügen“, dann hast du ein App-Symbol.<br><br>Vorlesen nutzt die Sprachausgabe deines Handys. Damit Polnisch auch offline vorgelesen wird: Android-Einstellungen → System → Sprachen → Sprachausgabe → Google-Sprachausgabe → Sprachdaten installieren → Polnisch herunterladen.</div>
@@ -565,6 +571,12 @@ function kursOnline(k,datum,quelle){kurs=Math.round(k*10000)/10000;
   kursDatum=`${d} – automatisch geladen (${quelle})`;speicher("kurs",kurs);speicher("kursDatum",kursDatum);
   $("kursStatus").textContent="✅ Kurs ist aktuell ("+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr geprüft)";
   kursAnzeigen();rechne();tabelle();sprit();trinkgeld();}
+/* Update-Anzeige (nur in der App) */
+function updateStatus(t){const [art,v]=t.split(":");const el=$("updStatus");if(!el)return;
+  el.textContent={aktuell:"✅ Du hast die neueste Version.",offline:"📴 Keine Verbindung – Update-Prüfung beim nächsten Öffnen.",
+    lade:"⬇️ Version "+v+" wird geladen …",bereit:"📦 Version "+v+" bereit – bitte im Fenster auf „Installieren“ tippen.",
+    erlaubnis:"⚠️ Version "+v+" verfügbar – bitte „Aus dieser Quelle zulassen“ aktivieren."}[art]||t}
+if(window.AndroidTTS&&AndroidTTS.version){$("updKarte").style.display="block";$("updVersion").textContent="Polen Offline "+AndroidTTS.version()}
 /* Zurück-Taste in der App */
 function zurueck(){if($("gross").classList.contains("an")){$("gross").classList.remove("an");return true}
   const a=document.querySelector(".seite.aktiv");if(a&&a.id!=="s-uebersetzer"){seite("uebersetzer");return true}return false}

@@ -21,6 +21,7 @@ public class MainActivity extends Activity {
     private boolean ttsBereit = false;
     private boolean seiteGeladen = false;
     private long letzterAbruf = 0;
+    private long letztesUpdateCheck = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +40,7 @@ public class MainActivity extends Activity {
             @Override public void onPageFinished(WebView v, String url) {
                 seiteGeladen = true;
                 kursHolen(true);
+                updatePruefen(false);
             }
         });
         web.addJavascriptInterface(new Sprache(), "AndroidTTS");
@@ -65,6 +67,12 @@ public class MainActivity extends Activity {
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "polen");
             return "ok";
         }
+
+        @JavascriptInterface
+        public void updateSuchen() { runOnUiThread(() -> updatePruefen(true)); }
+
+        @JavascriptInterface
+        public String version() { return "1.0." + Updater.eigeneNummerSicher(MainActivity.this); }
     }
 
     @Override
@@ -72,6 +80,12 @@ public class MainActivity extends Activity {
         super.onResume();
         // Beim Zurückkehren in die App erneut prüfen (höchstens alle 30 Minuten)
         if (seiteGeladen && System.currentTimeMillis() - letzterAbruf > 30 * 60 * 1000) kursHolen(false);
+        if (seiteGeladen && System.currentTimeMillis() - letztesUpdateCheck > 3 * 60 * 60 * 1000) updatePruefen(false);
+    }
+
+    private void updatePruefen(boolean manuell) {
+        letztesUpdateCheck = System.currentTimeMillis();
+        Updater.pruefen(this, manuell, text -> js("window.updateStatus && updateStatus('" + text + "')"));
     }
 
     /** Holt den aktuellen Euro→Złoty-Kurs, wenn Internet da ist. Ohne Internet bleibt der gespeicherte Kurs. */
