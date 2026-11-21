@@ -116,6 +116,7 @@ nav button.an{color:var(--rot);font-weight:700}
     <div class="reihe">
       <input id="kurs" inputmode="decimal" oninput="kursAendern()">
     </div>
+    <div class="hinweis" id="kursStatus" style="font-weight:600"></div>
     <div class="hinweis" id="kursInfo"></div>
   </div>
   <div class="karte">
@@ -523,7 +524,7 @@ function zeigeGross(pl,de){if(!pl)return;$("grossPl").textContent=pl;$("grossDe"
 
 /* ================= UMRECHNER ================= */
 let kurs=laden("kurs",4.25),kursDatum=laden("kursDatum","Nov. 2026 (Voreinstellung)"),waehr="pe";
-function kursAnzeigen(){$("kurs").value=zahlFmt(kurs,4);$("kursInfo").innerHTML=`1 € = ${zahlFmt(kurs,4)} zł · 1 zł = ${zahlFmt(1/kurs,4)} €<br>Stand: ${kursDatum}. Den aktuellen Kurs siehst du an jeder Wechselstube (Kantor) oder vor der Reise im Internet – einfach oben eintragen.`}
+function kursAnzeigen(){$("kurs").value=zahlFmt(kurs,4);$("kursInfo").innerHTML=`1 € = ${zahlFmt(kurs,4)} zł · 1 zł = ${zahlFmt(1/kurs,4)} €<br>Stand: ${kursDatum}. Mit Internet lädt die App den Kurs beim Öffnen automatisch. Du kannst ihn auch selbst eintragen (z. B. den Kurs der Wechselstube).`}
 function kursAendern(){const k=parseZahl($("kurs").value);if(k>0&&k<100){kurs=k;kursDatum=new Date().toLocaleDateString("de-DE")+" (selbst eingetragen)";speicher("kurs",kurs);speicher("kursDatum",kursDatum);
   $("kursInfo").innerHTML=`1 € = ${zahlFmt(kurs,4)} zł · 1 zł = ${zahlFmt(1/kurs,4)} €<br>Stand: ${kursDatum}`;rechne();tabelle();sprit();trinkgeld()}}
 function setWaehrung(w){waehr=w;$("w-pe").classList.toggle("an",w==="pe");$("w-ep").classList.toggle("an",w==="ep");schnelltasten();rechne()}
@@ -555,10 +556,19 @@ function zahlZeigen(){const n=parseInt($("zahl").value);$("zahlErg").textContent
 function seite(s){document.querySelectorAll(".seite").forEach(x=>x.classList.remove("aktiv"));$("s-"+s).classList.add("aktiv");
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("an",b.dataset.s===s));speicher("seite",s);window.scrollTo(0,0)}
 
+/* Automatischer Kurs (nur in der App, wenn Internet da ist) */
+function kursStatus(z){const el=$("kursStatus");if(!el)return;
+  if(z==="laden")el.textContent="🔄 Aktueller Kurs wird geladen …";
+  else if(z==="offline")el.textContent="📴 Kein Internet – es gilt der zuletzt gespeicherte Kurs.";}
+function kursOnline(k,datum,quelle){kurs=Math.round(k*10000)/10000;
+  const d=datum?new Date(datum+"T12:00:00").toLocaleDateString("de-DE"):new Date().toLocaleDateString("de-DE");
+  kursDatum=`${d} – automatisch geladen (${quelle})`;speicher("kurs",kurs);speicher("kursDatum",kursDatum);
+  $("kursStatus").textContent="✅ Kurs ist aktuell ("+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr geprüft)";
+  kursAnzeigen();rechne();tabelle();sprit();trinkgeld();}
 /* Zurück-Taste in der App */
 function zurueck(){if($("gross").classList.contains("an")){$("gross").classList.remove("an");return true}
   const a=document.querySelector(".seite.aktiv");if(a&&a.id!=="s-uebersetzer"){seite("uebersetzer");return true}return false}
-if(window.AndroidTTS){const h=[...document.querySelectorAll("#s-mehr .karte")].pop();h.querySelector(".hinweis").innerHTML="Diese App braucht kein Internet – alle Sätze, das Wörterbuch und der Umrechner sind eingebaut.<br><br>Vorlesen nutzt die Sprachausgabe deines Handys. Damit Polnisch vorgelesen wird: Android-Einstellungen → System → Sprachen → Sprachausgabe → Google-Sprachausgabe → Sprachdaten installieren → Polnisch herunterladen."}
+if(window.AndroidTTS){const h=[...document.querySelectorAll("#s-mehr .karte")].pop();h.querySelector(".hinweis").innerHTML="Diese App braucht kein Internet – alle Sätze, das Wörterbuch und der Umrechner sind eingebaut. Nur der Wechselkurs wird beim Öffnen automatisch aktualisiert, wenn Internet da ist.<br><br>Vorlesen nutzt die Sprachausgabe deines Handys. Damit Polnisch vorgelesen wird: Android-Einstellungen → System → Sprachen → Sprachausgabe → Google-Sprachausgabe → Sprachdaten installieren → Polnisch herunterladen."}
 /* Start */
 kategorien();zeigeSaetze();zeigeMerk();kursAnzeigen();schnelltasten();rechne();tabelle();
 if("speechSynthesis" in window)speechSynthesis.onvoiceschanged=()=>{};

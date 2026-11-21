@@ -8,12 +8,19 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Locale;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
     private WebView web;
     private TextToSpeech tts;
     private boolean ttsBereit = false;
+    private boolean seiteGeladen = false;
+    private long letzterAbruf = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +34,13 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);          // Merkliste & Wechselkurs speichern
         s.setAllowFileAccess(true);
-        s.setBlockNetworkLoads(true);          // garantiert offline
-        web.setWebViewClient(new WebViewClient());
+        s.setBlockNetworkLoads(true);          // die Seite selbst lädt nie etwas aus dem Netz
+        web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView v, String url) {
+                seiteGeladen = true;
+                kursHolen(true);
+            }
+        });
         web.addJavascriptInterface(new Sprache(), "AndroidTTS");
         setContentView(web);
 
@@ -53,6 +65,53 @@ public class MainActivity extends Activity {
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "polen");
             return "ok";
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Beim Zurückkehren in die App erneut prüfen (höchstens alle 30 Minuten)
+        if (seiteGeladen && System.currentTimeMillis() - letzterAbruf > 30 * 60 * 1000) kursHolen(false);
+    }
+
+    /** Holt den aktuellen Euro→Złoty-Kurs, wenn Internet da ist. Ohne Internet bleibt der gespeicherte Kurs. */
+    private void kursHolen(boolean beimStart) {
+        letzterAbruf = System.currentTimeMillis();
+        js("window.kursStatus && kursStatus('laden')");
+        new Thread(() -> {
+            double kurs = 0; String datum = "", quelle = "";
+            try {   // 1. Quelle: Europäische Zentralbank (über Frankfurter-API)
+                JSONObject o = new JSONObject(laden("https://api.frankfurter.app/latest?from=EUR&to=PLN"));
+                kurs = o.getJSONObject("rates").getDouble("PLN");
+                datum = o.optString("date", ""); quelle = "EZB";
+            } catch (Exception e1) {
+                try { // 2. Quelle als Ersatz
+                    JSONObject o = new JSONObject(laden("https://open.er-api.com/v6/latest/EUR"));
+                    kurs = o.getJSONObject("rates").getDouble("PLN");
+                    datum = ""; quelle = "ExchangeRate-API";
+                } catch (Exception e2) { kurs = 0; }
+            }
+            if (kurs > 1 && kurs < 20) {
+                js("window.kursOnline && kursOnline(" + kurs + ",'" + datum + "','" + quelle + "')");
+            } else {
+                js("window.kursStatus && kursStatus('offline')");
+            }
+        }).start();
+    }
+
+    private String laden(String adresse) throws Exception {
+        HttpURLConnection c = (HttpURLConnection) new URL(adresse).openConnection();
+        c.setConnectTimeout(6000); c.setReadTimeout(6000);
+        c.setRequestProperty("User-Agent", "PolenOffline-App");
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"))) {
+            StringBuilder sb = new StringBuilder(); String z;
+            while ((z = r.readLine()) != null) sb.append(z);
+            return sb.toString();
+        } finally { c.disconnect(); }
+    }
+
+    private void js(String code) {
+        runOnUiThread(() -> { if (web != null) web.evaluateJavascript(code, null); });
     }
 
     @Override
