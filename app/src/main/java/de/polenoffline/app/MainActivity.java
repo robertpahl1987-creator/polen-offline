@@ -1,6 +1,10 @@
 package de.polenoffline.app;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import androidx.core.content.FileProvider;
+import java.io.File;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.webkit.JavascriptInterface;
@@ -22,6 +26,7 @@ public class MainActivity extends Activity {
     private boolean seiteGeladen = false;
     private long letzterAbruf = 0;
     private long letztesUpdateCheck = 0;
+    private static final int FOTO = 41, GALERIE = 42;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +74,18 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void fotoMachen() { runOnUiThread(() -> kameraStarten()); }
+
+        @JavascriptInterface
+        public void fotoWaehlen() {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.setType("image/*");
+                startActivityForResult(Intent.createChooser(i, "Foto wählen"), GALERIE);
+            });
+        }
+
+        @JavascriptInterface
         public void updateSuchen() { runOnUiThread(() -> updatePruefen(true)); }
 
         @JavascriptInterface
@@ -81,6 +98,36 @@ public class MainActivity extends Activity {
         // Beim Zurückkehren in die App erneut prüfen (höchstens alle 30 Minuten)
         if (seiteGeladen && System.currentTimeMillis() - letzterAbruf > 30 * 60 * 1000) kursHolen(false);
         if (seiteGeladen && System.currentTimeMillis() - letztesUpdateCheck > 3 * 60 * 60 * 1000) updatePruefen(false);
+    }
+
+    private File fotoDatei() {
+        File dir = new File(getCacheDir(), "fotos");
+        dir.mkdirs();
+        return new File(dir, "preisschild.jpg");
+    }
+
+    private void kameraStarten() {
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", fotoDatei());
+            Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+            i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, uri);
+            i.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivityForResult(i, FOTO);
+        } catch (Exception e) {
+            Toast.makeText(this, "Keine Kamera-App gefunden.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (res != RESULT_OK) { js("window.scanAbbruch && scanAbbruch()"); return; }
+        Uri uri = null;
+        if (req == FOTO) uri = Uri.fromFile(fotoDatei());
+        else if (req == GALERIE && data != null) uri = data.getData();
+        if (uri == null) return;
+        js("window.scanLaeuft && scanLaeuft()");
+        Preisschild.erkennen(this, uri, json -> js("window.scanErgebnis && scanErgebnis(" + JSONObject.quote(json) + ")"));
     }
 
     private void updatePruefen(boolean manuell) {

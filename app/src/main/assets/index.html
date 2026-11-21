@@ -62,6 +62,24 @@ nav button.an{color:var(--rot);font-weight:700}
 .tasten{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
 .tasten button{padding:12px 0;border-radius:10px;border:1px solid var(--linie);background:var(--bg);color:var(--text);font-size:15px;font-weight:600}
 .leer{color:var(--grau);text-align:center;padding:20px}
+.scanbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.scanbtns .btn{padding:16px 8px;font-size:16px}
+.scanbtns .voll{grid-column:1/3}
+#scanBild{width:100%;max-height:260px;object-fit:contain;border-radius:10px;background:#000;display:none;margin-bottom:10px}
+.preischips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.preischips button{border:1px solid var(--linie);background:var(--bg);color:var(--text);border-radius:18px;padding:7px 12px;font-size:15px;font-weight:600}
+.preischips button.an{background:var(--rot);color:#fff;border-color:var(--rot)}
+.ware{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--linie)}
+.ware .n{flex:1;min-width:0}
+.ware .n b{display:block;font-size:16px}
+.ware .n small{color:var(--grau);font-size:13px}
+.ware .p{text-align:right;font-weight:700;white-space:nowrap}
+.ware .p small{display:block;color:var(--grau);font-weight:400;font-size:12.5px}
+.menge{display:flex;align-items:center;gap:4px}
+.menge button{width:30px;height:30px;border-radius:50%;border:1px solid var(--linie);background:var(--bg);color:var(--text);font-size:16px;font-weight:700}
+.summe{background:var(--rot);color:#fff;border-radius:14px;padding:14px;margin-bottom:12px}
+.summe .gross2{font-size:30px;font-weight:800}
+.summe small{opacity:.9}
 </style>
 </head>
 <body>
@@ -96,6 +114,52 @@ nav button.an{color:var(--rot);font-weight:700}
   <input id="suche" placeholder="🔍 Suchen (Deutsch oder Polnisch)…" oninput="zeigeSaetze()" style="margin-bottom:10px">
   <div class="chips" id="kats"></div>
   <div id="liste"></div>
+</section>
+
+<!-- EINKAUF: PREISSCHILD SCANNEN + PREISLISTE -->
+<section class="seite" id="s-einkauf">
+  <div class="karte">
+    <h2>📷 Preisschild scannen</h2>
+    <div class="scanbtns">
+      <button class="btn nurApp" onclick="AndroidTTS.fotoMachen()">📷 Foto machen</button>
+      <button class="btn2 nurApp" onclick="AndroidTTS.fotoWaehlen()">🖼️ Aus Galerie</button>
+      <button class="btn2 voll" onclick="manuellNeu()">✍️ Selbst eingeben</button>
+    </div>
+    <div class="hinweis nurApp">Fotografiere das Preisschild möglichst gerade und nah. Die Texterkennung läuft komplett auf dem Handy – ohne Internet.</div>
+  </div>
+
+  <div class="karte" id="scanKarte" style="display:none">
+    <img id="scanBild" alt="Preisschild">
+    <div class="hinweis" id="scanInfo"></div>
+    <label style="margin-top:8px">Produkt (Polnisch – kannst du korrigieren)</label>
+    <input id="scanName" oninput="scanUebersetzen()" placeholder="z. B. Mleko 3,2% 1 l">
+    <div class="ausgabe" id="scanDe" style="font-size:19px"></div>
+    <label style="margin-top:10px">Preis</label>
+    <div class="preischips" id="scanPreise"></div>
+    <div class="reihe">
+      <input id="scanPreis" inputmode="decimal" placeholder="0,00" oninput="scanPreisAnzeigen()" style="font-size:22px;font-weight:700">
+      <select id="scanWaehrung" onchange="scanPreisAnzeigen()" style="flex:0 0 90px"><option value="zl">zł</option><option value="eur">€</option></select>
+    </div>
+    <div class="erg" id="scanEuro" style="font-size:26px"></div>
+    <div class="reihe" style="margin-top:10px">
+      <div><label>Menge</label><input id="scanMenge" inputmode="decimal" value="1" oninput="scanPreisAnzeigen()"></div>
+      <div style="flex:2;align-self:flex-end"><button class="btn" style="width:100%" onclick="zurListe()">🛒 Zur Preisliste</button></div>
+    </div>
+    <details style="margin-top:10px"><summary class="hinweis">Erkannter Text anzeigen</summary><pre id="scanRoh" style="white-space:pre-wrap;font-size:13px"></pre></details>
+  </div>
+
+  <div class="summe">
+    <small>🛒 Preisliste – Gesamt</small>
+    <div class="gross2" id="sumZl">0,00 zł</div>
+    <div style="font-size:19px;font-weight:700" id="sumEur">= 0,00 €</div>
+    <small id="sumAnz">Noch nichts auf der Liste</small>
+  </div>
+  <div class="karte">
+    <div id="liste2"></div>
+    <div class="reihe" style="margin-top:10px">
+      <button class="btn2" onclick="listeLeeren()">🗑️ Liste leeren</button>
+    </div>
+  </div>
 </section>
 
 <!-- UMRECHNER -->
@@ -222,6 +286,7 @@ nav button.an{color:var(--rot);font-weight:700}
 <nav>
   <button class="an" data-s="uebersetzer" onclick="seite('uebersetzer')"><span>🔄</span>Übersetzen</button>
   <button data-s="saetze" onclick="seite('saetze')"><span>💬</span>Sätze</button>
+  <button data-s="einkauf" onclick="seite('einkauf')"><span>🛒</span>Einkauf</button>
   <button data-s="umrechner" onclick="seite('umrechner')"><span>💶</span>Umrechner</button>
   <button data-s="mehr" onclick="seite('mehr')"><span>⭐</span>Mehr</button>
 </nav>
@@ -532,7 +597,7 @@ function zeigeGross(pl,de){if(!pl)return;$("grossPl").textContent=pl;$("grossDe"
 let kurs=laden("kurs",4.25),kursDatum=laden("kursDatum","Nov. 2026 (Voreinstellung)"),waehr="pe";
 function kursAnzeigen(){$("kurs").value=zahlFmt(kurs,4);$("kursInfo").innerHTML=`1 € = ${zahlFmt(kurs,4)} zł · 1 zł = ${zahlFmt(1/kurs,4)} €<br>Stand: ${kursDatum}. Mit Internet lädt die App den Kurs beim Öffnen automatisch. Du kannst ihn auch selbst eintragen (z. B. den Kurs der Wechselstube).`}
 function kursAendern(){const k=parseZahl($("kurs").value);if(k>0&&k<100){kurs=k;kursDatum=new Date().toLocaleDateString("de-DE")+" (selbst eingetragen)";speicher("kurs",kurs);speicher("kursDatum",kursDatum);
-  $("kursInfo").innerHTML=`1 € = ${zahlFmt(kurs,4)} zł · 1 zł = ${zahlFmt(1/kurs,4)} €<br>Stand: ${kursDatum}`;rechne();tabelle();sprit();trinkgeld()}}
+  $("kursInfo").innerHTML=`1 € = ${zahlFmt(kurs,4)} zł · 1 zł = ${zahlFmt(1/kurs,4)} €<br>Stand: ${kursDatum}`;rechne();tabelle();sprit();trinkgeld();if(window.listeZeigen)listeZeigen()}}
 function setWaehrung(w){waehr=w;$("w-pe").classList.toggle("an",w==="pe");$("w-ep").classList.toggle("an",w==="ep");schnelltasten();rechne()}
 function rechne(){const b=parseZahl($("betrag").value)||0;$("ergebnis").textContent=waehr==="pe"?zahlFmt(b/kurs)+" €":zahlFmt(b*kurs)+" zł"}
 function schnelltasten(){const w=waehr==="pe"?[5,10,20,50,100,200,500,1000]:[1,5,10,20,50,100,200,500];
@@ -562,6 +627,128 @@ function zahlZeigen(){const n=parseInt($("zahl").value);$("zahlErg").textContent
 function seite(s){document.querySelectorAll(".seite").forEach(x=>x.classList.remove("aktiv"));$("s-"+s).classList.add("aktiv");
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("an",b.dataset.s===s));speicher("seite",s);window.scrollTo(0,0)}
 
+
+/* ================= EINKAUF: Wörterbuch für Preisschilder (Polnisch → Deutsch) ================= */
+const WAREN = {
+"mleko":"Milch","maślanka":"Buttermilch","śmietana":"Sahne","śmietanka":"Sahne","jogurt":"Joghurt","kefir":"Kefir","ser":"Käse","twaróg":"Quark","serek":"Frischkäse","masło":"Butter","margaryna":"Margarine","jaja":"Eier","jajka":"Eier","jajko":"Ei",
+"chleb":"Brot","bułka":"Brötchen","bułki":"Brötchen","rogal":"Hörnchen","rogalik":"Hörnchen","drożdżówka":"Hefegebäck","pączek":"Krapfen","ciasto":"Kuchen","ciastka":"Kekse","herbatniki":"Butterkekse","wafle":"Waffeln","tort":"Torte","sernik":"Käsekuchen","mąka":"Mehl","cukier":"Zucker","sól":"Salz","pieprz":"Pfeffer","ryż":"Reis","makaron":"Nudeln","kasza":"Grütze","płatki":"Flocken","owsiane":"Hafer-","kukurydziane":"Mais-","olej":"Öl","oliwa":"Olivenöl","ocet":"Essig","musztarda":"Senf","ketchup":"Ketchup","majonez":"Mayonnaise","sos":"Soße","przyprawa":"Gewürz","miód":"Honig","dżem":"Marmelade","konfitura":"Konfitüre","nutella":"Nutella","krem":"Creme",
+"mięso":"Fleisch","wieprzowina":"Schweinefleisch","wieprzowy":"Schweine-","wieprzowa":"Schweine-","wołowina":"Rindfleisch","wołowy":"Rinder-","wołowa":"Rinder-","cielęcina":"Kalbfleisch","kurczak":"Hähnchen","kurczaka":"Hähnchen","drobiowy":"Geflügel-","drobiowa":"Geflügel-","drób":"Geflügel","indyk":"Pute","indyka":"Pute","filet":"Filet","pierś":"Brust","piersi":"Brust","udo":"Keule","udka":"Keulen","skrzydełka":"Flügel","schab":"Schweinerücken","karkówka":"Schweinenacken","boczek":"Speck","żeberka":"Rippchen","mielone":"Hackfleisch","mielony":"Hack-","kiełbasa":"Wurst","kiełbaski":"Würstchen","parówki":"Wiener Würstchen","szynka":"Schinken","salami":"Salami","pasztet":"Pastete","kabanosy":"Kabanossi","wędlina":"Aufschnitt","wędzony":"geräuchert","wędzona":"geräuchert","gotowana":"gekocht","gotowany":"gekocht","plastry":"Scheiben","plasterki":"Scheiben",
+"ryba":"Fisch","ryby":"Fisch","łosoś":"Lachs","śledź":"Hering","śledzie":"Heringe","tuńczyk":"Thunfisch","dorsz":"Kabeljau","makrela":"Makrele","pstrąg":"Forelle","krewetki":"Garnelen","rybne":"Fisch-",
+"warzywa":"Gemüse","owoce":"Obst","ziemniaki":"Kartoffeln","ziemniak":"Kartoffel","pomidory":"Tomaten","pomidor":"Tomate","ogórki":"Gurken","ogórek":"Gurke","kiszone":"saure","marchew":"Karotten","marchewka":"Karotten","cebula":"Zwiebel","czosnek":"Knoblauch","papryka":"Paprika","kapusta":"Kohl","kiszona":"Sauer-","sałata":"Salat","brokuł":"Brokkoli","kalafior":"Blumenkohl","pieczarki":"Champignons","grzyby":"Pilze","fasola":"Bohnen","groszek":"Erbsen","kukurydza":"Mais","burak":"Rote Bete","buraki":"Rote Bete","seler":"Sellerie","por":"Lauch","dynia":"Kürbis","szpinak":"Spinat","rzodkiewka":"Radieschen",
+"jabłka":"Äpfel","jabłko":"Apfel","banany":"Bananen","banan":"Banane","pomarańcze":"Orangen","pomarańcza":"Orange","mandarynki":"Mandarinen","cytryna":"Zitrone","cytryny":"Zitronen","gruszki":"Birnen","winogrona":"Weintrauben","truskawki":"Erdbeeren","maliny":"Himbeeren","borówki":"Heidelbeeren","wiśnie":"Sauerkirschen","czereśnie":"Kirschen","śliwki":"Pflaumen","brzoskwinie":"Pfirsiche","arbuz":"Wassermelone","ananas":"Ananas","kiwi":"Kiwi","awokado":"Avocado","orzechy":"Nüsse","rodzynki":"Rosinen",
+"woda":"Wasser","mineralna":"Mineral-","źródlana":"Quell-","gazowana":"mit Kohlensäure","niegazowana":"ohne Kohlensäure","lekko":"leicht","sok":"Saft","nektar":"Nektar","napój":"Getränk","napoj":"Getränk","lemoniada":"Limonade","cola":"Cola","kawa":"Kaffee","mielona":"gemahlen","ziarnista":"Bohnen","rozpuszczalna":"löslich","herbata":"Tee","kakao":"Kakao","piwo":"Bier","jasne":"hell","ciemne":"dunkel","bezalkoholowe":"alkoholfrei","wino":"Wein","czerwone":"rot","białe":"weiß","wytrawne":"trocken","słodkie":"süß","półsłodkie":"halbsüß","wódka":"Wodka","whisky":"Whisky","likier":"Likör","szampan":"Sekt","energetyczny":"Energy-",
+"czekolada":"Schokolade","gorzka":"Zartbitter","mleczna":"Vollmilch","cukierki":"Bonbons","żelki":"Gummibärchen","gouda":"Gouda","edamski":"Edamer","mozzarella":"Mozzarella","feta":"Feta","żółty":"gelb","baton":"Riegel","batonik":"Riegel","chipsy":"Chips","paluszki":"Salzstangen","orzeszki":"Erdnüsse","lody":"Eis","popcorn":"Popcorn","krakersy":"Cracker",
+"mrożone":"tiefgekühlt","mrożony":"tiefgekühlt","mrożona":"tiefgekühlt","świeże":"frisch","świeży":"frisch","świeża":"frisch","pizza":"Pizza","pierogi":"Teigtaschen","frytki":"Pommes","zupa":"Suppe","konserwa":"Konserve","puszka":"Dose","słoik":"Glas","gotowe":"Fertig-","danie":"Gericht","sałatka":"Salat",
+"papier":"Papier","toaletowy":"Toiletten-","ręczniki":"Tücher","papierowe":"Papier-","chusteczki":"Taschentücher","mydło":"Seife","szampon":"Shampoo","odżywka":"Spülung","żel":"Gel","pod":"","prysznic":"Dusche","pasta":"Paste","zębów":"Zähne","szczoteczka":"Zahnbürste","dezodorant":"Deo","krem":"Creme","proszek":"Pulver","prania":"Wäsche","płyn":"Flüssigkeit","naczyń":"Geschirr","kapsułki":"Kapseln","tabletki":"Tabs","zmywarki":"Spülmaschine","worki":"Beutel","śmieci":"Müll","pieluchy":"Windeln","podpaski":"Binden","golarka":"Rasierer","maszynki":"Rasierer","plastry opatrunkowe":"Pflaster",
+"papierosy":"Zigaretten","tytoń":"Tabak","zapalniczka":"Feuerzeug","karma":"Futter","dla":"für","psa":"Hund","kota":"Katze","dzieci":"Kinder",
+"cena":"Preis","promocja":"Angebot","nowość":"Neu","opakowanie":"Packung","sztuka":"Stück","szt":"Stück","szt.":"Stück","kg":"kg","g":"g","l":"l","ml":"ml","op":"Pck.","op.":"Pck.","za":"für","1kg":"1 kg","naturalny":"Natur","naturalna":"Natur","tłusty":"fett","chudy":"mager","półtłusty":"halbfett","light":"light","bio":"Bio","eko":"Bio","pełnoziarnisty":"Vollkorn","razowy":"Vollkorn","żytni":"Roggen","pszenny":"Weizen","duży":"groß","mały":"klein","bez":"ohne","laktozy":"Laktose","glutenu":"Gluten","cukru":"Zucker","z":"mit","i":"und","w":"in","o":"mit","smaku":"Geschmack","truskawkowy":"Erdbeer","czekoladowy":"Schoko","waniliowy":"Vanille","owocowy":"Frucht"
+};
+const ENDUNGEN=["ami","ach","ego","emu","owi","ów","ych","ymi","ich","imi","om","em","ej","ą","ę","y","i","e","a","u","o"];
+const stamm=w=>{for(const e of ENDUNGEN){const n=ohneAkzent(e);if(w.length-n.length>=4&&w.endsWith(n))return w.slice(0,-n.length)}return w};
+const WARE_EXAKT={},WARE_STAMM={};
+for(const k in WAREN){const n=ohneAkzent(k);WARE_EXAKT[n]=WAREN[k];if(!WARE_STAMM[stamm(n)])WARE_STAMM[stamm(n)]=WAREN[k]}
+for(const k in PL_DE){if(!WARE_EXAKT[k])WARE_EXAKT[k]=PL_DE[k]}
+function wareUebersetzen(txt){
+  return txt.split(/\s+/).filter(Boolean).map(w=>{
+    const n=ohneAkzent(w).replace(/[^a-z0-9%.,]/g,"");
+    if(!n)return"";
+    if(/\d/.test(n))return w;                      // Mengen wie 1l, 500g, 3,2%
+    if(WARE_EXAKT[n]!==undefined)return WARE_EXAKT[n];
+    const st=stamm(n);if(WARE_STAMM[st])return WARE_STAMM[st];
+    for(const k in WARE_STAMM){if(k.length>=4&&(st.startsWith(k)||k.startsWith(st)))return WARE_STAMM[k]}
+    return '<span class="unbekannt">'+esc(w.toLowerCase())+'</span>';
+  }).filter(Boolean).join(" ");
+}
+
+/* ================= PREISSCHILD AUSWERTEN ================= */
+const EINHEIT=/(\/\s?(kg|l|szt|100\s?g|1\s?kg)|za\s?1|za\s?100|cena\s?(za|jedn)|1\s?kg\s?=|1\s?l\s?=|\bjedn)/i;
+function preiseFinden(zeilen){
+  const kand=[];
+  const add=(wert,z,bonus,text)=>{if(!(wert>0&&wert<100000))return;
+    let p=(z.h||20)+bonus;if(EINHEIT.test(z.t))p-=60;if(/%/.test(z.t))p-=25;if(/(zł|zl|pln)/i.test(z.t))p+=30;
+    const vorh=kand.find(k=>Math.abs(k.wert-wert)<0.001);if(vorh){vorh.p=Math.max(vorh.p,p);vorh.einheit=vorh.einheit&&EINHEIT.test(z.t);return}
+    kand.push({wert,p,einheit:EINHEIT.test(z.t),text})};
+  zeilen.forEach(z=>{
+    const t=z.t.replace(/[oO](?=\d)|(?<=\d)[oO]/g,"0");
+    let m;const r1=/(\d{1,4})\s?[,.]\s?(\d{2})(?!\d)/g;
+    while((m=r1.exec(t)))add(parseFloat(m[1]+"."+m[2]),z,0,m[0]);
+    const r2=/(\d{1,4})\s+(\d{2})\s*(zł|zl|pln)/ig;
+    while((m=r2.exec(t)))add(parseFloat(m[1]+"."+m[2]),z,10,m[0]);
+  });
+  // Große Zahl + kleine hochgestellte Cents als getrennte Zeilen (z. B. "4" und "99")
+  const nurZ=zeilen.filter(z=>/^\s*\d{1,3}\s*$/.test(z.t)&&z.h);
+  nurZ.forEach(a=>nurZ.forEach(b=>{
+    if(a===b||!/^\s*\d{2}\s*$/.test(b.t))return;
+    const rechts=b.x>=a.x+a.w*0.5&&b.x<a.x+a.w+a.h*1.5,oben=b.y>=a.y-a.h*0.3&&b.y<a.y+a.h*0.7;
+    if(rechts&&oben&&b.h<a.h)add(parseFloat(a.t.trim()+"."+b.t.trim()),a,25,a.t.trim()+","+b.t.trim());
+  }));
+  return kand.sort((a,b)=>b.p-a.p);
+}
+const NICHT_NAME=/^(cena|promocja|zł|zl|pln|nowość|kod|ean|szt|kg|data|ważne|wazne|biedronka|lidl|netto|kaufland|carrefour|auchan|żabka|zabka|dino|stokrotka|lewiatan|polomarket|rossmann|hebe)\b/i;
+function nameFinden(zeilen){
+  const c=zeilen.filter(z=>{const b=(z.t.match(/[a-ząćęłńóśźż]/gi)||[]).length;return b>=3&&b/z.t.replace(/\s/g,"").length>0.55&&!NICHT_NAME.test(z.t.trim())&&!EINHEIT.test(z.t)});
+  if(!c.length)return"";
+  c.sort((a,b)=>(a.y||0)-(b.y||0));
+  // die ersten 1–2 Textzeilen von oben, ähnlich groß wie die größte
+  const maxH=Math.max(...c.slice(0,4).map(z=>z.h||0));
+  return c.slice(0,4).filter(z=>(z.h||0)>=maxH*0.55).slice(0,2).map(z=>z.t.trim()).join(" ");
+}
+
+/* ================= SCAN-ANZEIGE ================= */
+function scanLaeuft(){seite("einkauf");$("scanKarte").style.display="block";$("scanBild").style.display="none";
+  $("scanInfo").textContent="🔍 Preisschild wird gelesen …";$("scanPreise").innerHTML="";}
+function scanAbbruch(){}
+function scanErgebnis(jsonText){
+  let d;try{d=JSON.parse(jsonText)}catch(e){d={fehler:"Unbekannter Fehler"}}
+  $("scanKarte").style.display="block";
+  if(d.fehler){$("scanInfo").textContent="⚠️ "+d.fehler+". Bitte nochmal versuchen oder selbst eingeben.";return}
+  if(d.bild){$("scanBild").src=d.bild;$("scanBild").style.display="block"}
+  const z=d.zeilen||[];$("scanRoh").textContent=z.map(x=>x.t).join("\n")||"(kein Text erkannt)";
+  if(!z.length){$("scanInfo").textContent="⚠️ Kein Text erkannt. Näher ran, gerade halten, gutes Licht – oder selbst eingeben.";return}
+  const preise=preiseFinden(z);
+  $("scanName").value=nameFinden(z);scanUebersetzen();
+  $("scanWaehrung").value="zl";$("scanMenge").value="1";
+  if(preise.length){
+    $("scanInfo").textContent="✅ Preisschild erkannt – bitte kurz prüfen.";
+    $("scanPreise").innerHTML=preise.slice(0,5).map((p,i)=>`<button class="${i?"":"an"}" onclick="preisWahl(this,${p.wert})">${zahlFmt(p.wert)} zł${p.einheit?" /Einheit":""}</button>`).join("");
+    $("scanPreis").value=zahlFmt(preise[0].wert);
+  } else {$("scanInfo").textContent="⚠️ Kein Preis gefunden – bitte Preis eintippen.";$("scanPreis").value=""}
+  scanPreisAnzeigen();
+}
+function preisWahl(el,w){document.querySelectorAll("#scanPreise button").forEach(b=>b.classList.remove("an"));el.classList.add("an");$("scanPreis").value=zahlFmt(w);scanPreisAnzeigen()}
+function scanUebersetzen(){const n=$("scanName").value.trim();if(!n){$("scanDe").innerHTML="";return}
+  // erst Polnisch-Wörterbuch; wenn fast nichts erkannt wird, vielleicht wurde Deutsch eingegeben
+  $("scanDe").innerHTML="🇩🇪 "+wareUebersetzen(n);}
+function scanPreisInZl(){const p=parseZahl($("scanPreis").value)||0;return $("scanWaehrung").value==="eur"?p*kurs:p}
+function scanPreisAnzeigen(){const zl=scanPreisInZl(),m=parseZahl($("scanMenge").value)||1;
+  if(!zl){$("scanEuro").textContent="";return}
+  const eur=zl/kurs;$("scanEuro").innerHTML=`${zahlFmt(zl)} zł = ${zahlFmt(eur)} €`+(m!==1?`<div style="font-size:16px;color:var(--grau)">× ${String(m).replace(".",",")} = ${zahlFmt(zl*m)} zł = ${zahlFmt(eur*m)} €</div>`:"")}
+function manuellNeu(){$("scanKarte").style.display="block";$("scanBild").style.display="none";$("scanInfo").textContent="✍️ Produkt und Preis eintragen (Name auf Polnisch oder Deutsch).";
+  $("scanName").value="";$("scanDe").innerHTML="";$("scanPreise").innerHTML="";$("scanPreis").value="";$("scanMenge").value="1";$("scanEuro").textContent="";$("scanRoh").textContent="";$("scanName").focus()}
+
+/* ================= PREISLISTE ================= */
+let einkauf=laden("einkauf",[]);
+function zurListe(){const zl=scanPreisInZl();if(!(zl>0)){alert("Bitte einen Preis eingeben.");return}
+  const pl=$("scanName").value.trim()||"Artikel";const de=$("scanDe").innerText.replace(/^🇩🇪\s*/,"").trim();
+  einkauf.push({pl,de:de===pl.toLowerCase()?"":de,preis:Math.round(zl*100)/100,menge:parseZahl($("scanMenge").value)||1});
+  speicher("einkauf",einkauf);$("scanKarte").style.display="none";listeZeigen();window.scrollTo(0,document.body.scrollHeight)}
+function mengeAendern(i,d){einkauf[i].menge=Math.max(0,Math.round((einkauf[i].menge+d)*100)/100);
+  if(einkauf[i].menge===0&&!confirm("„"+(einkauf[i].de||einkauf[i].pl)+"“ von der Liste entfernen?")){einkauf[i].menge=1}
+  if(einkauf[i].menge===0)einkauf.splice(i,1);speicher("einkauf",einkauf);listeZeigen()}
+function listeLeeren(){if(einkauf.length&&confirm("Ganze Preisliste löschen?")){einkauf=[];speicher("einkauf",einkauf);listeZeigen()}}
+function listeZeigen(){
+  const el=$("liste2");if(!el)return;let sum=0,anz=0;
+  el.innerHTML=einkauf.length?einkauf.map((w,i)=>{const g=w.preis*w.menge;sum+=g;anz+=w.menge;
+    return `<div class="ware"><div class="n"><b>${esc(w.de||w.pl)}</b><small>${w.de?esc(w.pl)+" · ":""}${zahlFmt(w.preis)} zł / Stück</small></div>
+    <div class="menge"><button onclick="mengeAendern(${i},-1)">−</button><span style="min-width:22px;text-align:center;font-weight:700">${String(w.menge).replace(".",",")}</span><button onclick="mengeAendern(${i},1)">+</button></div>
+    <div class="p">${zahlFmt(g)} zł<small>${zahlFmt(g/kurs)} €</small></div></div>`}).join("")
+    :'<div class="leer">Noch leer. Fotografiere ein Preisschild oder gib etwas selbst ein.</div>';
+  $("sumZl").textContent=zahlFmt(sum)+" zł";$("sumEur").textContent="= "+zahlFmt(sum/kurs)+" €";
+  $("sumAnz").textContent=einkauf.length?`${einkauf.length} Artikel · Kurs 1 € = ${zahlFmt(kurs,4)} zł`:"Noch nichts auf der Liste";
+}
+if(!window.AndroidTTS||!AndroidTTS.fotoMachen)document.querySelectorAll(".nurApp").forEach(e=>e.style.display="none");
+listeZeigen();
+
 /* Automatischer Kurs (nur in der App, wenn Internet da ist) */
 function kursStatus(z){const el=$("kursStatus");if(!el)return;
   if(z==="laden")el.textContent="🔄 Aktueller Kurs wird geladen …";
@@ -570,7 +757,7 @@ function kursOnline(k,datum,quelle){kurs=Math.round(k*10000)/10000;
   const d=datum?new Date(datum+"T12:00:00").toLocaleDateString("de-DE"):new Date().toLocaleDateString("de-DE");
   kursDatum=`${d} – automatisch geladen (${quelle})`;speicher("kurs",kurs);speicher("kursDatum",kursDatum);
   $("kursStatus").textContent="✅ Kurs ist aktuell ("+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr geprüft)";
-  kursAnzeigen();rechne();tabelle();sprit();trinkgeld();}
+  kursAnzeigen();rechne();tabelle();sprit();trinkgeld();listeZeigen();}
 /* Update-Anzeige (nur in der App) */
 function updateStatus(t){const [art,v]=t.split(":");const el=$("updStatus");if(!el)return;
   el.textContent={aktuell:"✅ Du hast die neueste Version.",offline:"📴 Keine Verbindung – Update-Prüfung beim nächsten Öffnen.",

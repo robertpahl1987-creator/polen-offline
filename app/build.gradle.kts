@@ -41,3 +41,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
+
+dependencies {
+    // Texterkennung für Preisschilder – Modell ist in der App enthalten, funktioniert offline
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    // FileProvider für Kamerafotos
+    implementation("androidx.core:core:1.13.1")
+}
