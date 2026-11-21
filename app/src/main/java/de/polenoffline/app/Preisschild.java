@@ -31,14 +31,18 @@ public class Preisschild {
                     .addOnSuccessListener(text -> {
                         try {
                             JSONArray zeilen = new JSONArray();
-                            for (Text.TextBlock b : text.getTextBlocks())
+                            int blockNr = 0;
+                            for (Text.TextBlock b : text.getTextBlocks()) {
+                                blockNr++;
                                 for (Text.Line l : b.getLines()) {
                                     Rect r = l.getBoundingBox();
                                     JSONObject z = new JSONObject();
                                     z.put("t", l.getText());
+                                    z.put("b", blockNr);
                                     if (r != null) { z.put("x", r.left); z.put("y", r.top); z.put("w", r.width()); z.put("h", r.height()); }
                                     zeilen.put(z);
                                 }
+                            }
                             JSONObject o = new JSONObject();
                             o.put("zeilen", zeilen); o.put("bild", vorschau);
                             o.put("breite", bmp.getWidth()); o.put("hoehe", bmp.getHeight());

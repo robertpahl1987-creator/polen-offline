@@ -96,15 +96,22 @@ nav button.an{color:var(--rot);font-weight:700}
       <button id="r-depl" class="an" onclick="setRichtung('depl')">Deutsch → Polnisch</button>
       <button id="r-plde" onclick="setRichtung('plde')">Polnisch → Deutsch</button>
     </div>
+    <div class="reihe nurApp" style="margin-bottom:10px">
+      <button class="btn" onclick="textFoto('kamera')">📷 Text fotografieren</button>
+      <button class="btn2" onclick="textFoto('galerie')" style="flex:0 0 auto">🖼️ Galerie</button>
+    </div>
+    <img id="textBild" alt="Foto" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;background:#000;display:none;margin-bottom:10px">
     <textarea id="eingabe" placeholder="Text eingeben, z. B. „Wo ist der Bahnhof?“" oninput="uebersetze()"></textarea>
-    <div class="ausgabe" id="ausgabe"></div>
+    <div class="hinweis" id="kiLabel" style="font-weight:600;margin-top:8px"></div>
+    <div class="ausgabe" id="ausgabe" style="white-space:pre-wrap"></div>
     <div class="hinweis" id="ausgabeAus"></div>
     <div class="reihe" style="margin-top:10px">
       <button class="btn2" onclick="vorlesen(document.getElementById('ausgabe').innerText, richtung==='depl'?'pl-PL':'de-DE')">🔊 Vorlesen</button>
       <button class="btn2" onclick="zeigeGross(document.getElementById('ausgabe').innerText, document.getElementById('eingabe').value)">⛶ Groß zeigen</button>
       <button class="btn2" onclick="document.getElementById('eingabe').value='';uebersetze()">✕ Leeren</button>
     </div>
-    <div class="hinweis">Ganze Sätze aus dem Sprachführer werden genau übersetzt. Andere Texte werden Wort für Wort aus dem eingebauten Wörterbuch übersetzt – das ist eine Hilfe, keine perfekte Grammatik. Unbekannte Wörter erscheinen <span class="unbekannt">grau</span>.</div>
+    <div class="hinweis" id="kiInfo">Ganze Sätze aus dem Sprachführer werden genau übersetzt. Andere Texte werden Wort für Wort aus dem eingebauten Wörterbuch übersetzt – das ist eine Hilfe, keine perfekte Grammatik. Unbekannte Wörter erscheinen <span class="unbekannt">grau</span>.</div>
+    <button class="btn2 nurApp" id="kiBtn" style="margin-top:8px;display:none" onclick="AndroidTTS.kiLaden();kiStatus('laedt')">⬇️ Übersetzungs-Paket jetzt laden (ca. 60 MB)</button>
   </div>
   <div id="vorschlaege"></div>
 </section>
@@ -121,8 +128,8 @@ nav button.an{color:var(--rot);font-weight:700}
   <div class="karte">
     <h2>📷 Preisschild scannen</h2>
     <div class="scanbtns">
-      <button class="btn nurApp" onclick="AndroidTTS.fotoMachen()">📷 Foto machen</button>
-      <button class="btn2 nurApp" onclick="AndroidTTS.fotoWaehlen()">🖼️ Aus Galerie</button>
+      <button class="btn nurApp" onclick="fotoZweck='preis';AndroidTTS.fotoMachen()">📷 Foto machen</button>
+      <button class="btn2 nurApp" onclick="fotoZweck='preis';AndroidTTS.fotoWaehlen()">🖼️ Aus Galerie</button>
       <button class="btn2 voll" onclick="manuellNeu()">✍️ Selbst eingeben</button>
     </div>
     <div class="hinweis nurApp">Fotografiere das Preisschild möglichst gerade und nah. Die Texterkennung läuft komplett auf dem Handy – ohne Internet.</div>
@@ -549,10 +556,10 @@ function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 function uebersetze(){
   const roh=$("eingabe").value,txt=norm(roh);
   const phr=richtung==="depl"?PHR_DE:PHR_PL, wb=richtung==="depl"?DE_PL:PL_DE;
-  $("ausgabeAus").textContent="";
-  if(!txt){$("ausgabe").innerHTML="";$("vorschlaege").innerHTML="";return}
+  $("ausgabeAus").textContent="";$("kiLabel").textContent="";
+  if(!txt){$("ausgabe").innerHTML="";$("vorschlaege").innerHTML="";$("textBild").style.display="none";return}
   // 1) Ganzer Satz
-  if(phr[txt]){$("ausgabe").textContent=phr[txt];
+  if(phr[txt]){$("kiLabel").textContent="📗 Aus dem Sprachführer";$("ausgabe").textContent=phr[txt];
     if(richtung==="depl"){const s=ALLE.find(x=>norm(x.de.replace(/…/g,""))===txt);if(s)$("ausgabeAus").textContent="Aussprache: "+s.aus}
   } else {
     // 2) Längste Übereinstimmung, Stück für Stück
@@ -565,6 +572,8 @@ function uebersetze(){
         if(/^\d+([.,]\d+)?$/.test(w[i]))out.push(w[i]);else out.push('<span class="unbekannt">'+esc(w[i])+'</span>');i++}
     }
     $("ausgabe").innerHTML=out.join(" ");
+    if(kiVerfuegbar()){$("kiLabel").textContent="🧠 Übersetze …";kiAnfrage(roh)}
+    else $("kiLabel").textContent="📖 Wort für Wort";
   }
   // Vorschläge aus dem Sprachführer
   const treffer=suchen(roh).slice(0,6);
@@ -660,6 +669,40 @@ function wareUebersetzen(txt){
   }).filter(Boolean).join(" ");
 }
 
+
+/* ================= KI-ÜBERSETZUNG (offline auf dem Handy) ================= */
+let kiZaehler=0,kiTimer=null,kiZustand="";
+const kiVerfuegbar=()=>window.AndroidTTS&&AndroidTTS.kiBereit&&AndroidTTS.kiBereit();
+function kiAnfrage(text){clearTimeout(kiTimer);const id=++kiZaehler;
+  kiTimer=setTimeout(()=>AndroidTTS.kiUebersetzen(id,text,richtung==="plde"),350)}
+function kiErgebnis(id,text,ok){
+  if(id===window._wareId){if(ok&&text.trim())$("scanDe").textContent="🇩🇪 "+text;return}
+  if(id!==kiZaehler)return;   // nur die neueste Anfrage anzeigen
+  if(ok&&text.trim()){$("ausgabe").textContent=text;$("kiLabel").textContent="🧠 Satz-Übersetzung (offline)"}
+  else $("kiLabel").textContent="📖 Wort für Wort"}
+function kiStatus(z){kiZustand=z;const info=$("kiInfo"),btn=$("kiBtn");if(!info)return;
+  const t={bereit:"✅ Satz-Übersetzung ist installiert und funktioniert ohne Internet. Feste Sätze kommen aus dem Sprachführer.",
+    wartet_wlan:"ℹ️ Für echte Satz-Übersetzungen braucht die App einmalig ein Sprachpaket (ca. 60 MB). Es lädt automatisch, sobald du im WLAN bist – oder jetzt über mobile Daten. Bis dahin: Wort für Wort.",
+    laedt:"⬇️ Sprachpaket wird geladen … (danach funktioniert die Übersetzung offline)",
+    fehler:"⚠️ Laden fehlgeschlagen – bitte Internet prüfen und nochmal tippen."}[z];
+  if(t)info.textContent=t;btn.style.display=(z==="wartet_wlan"||z==="fehler")?"block":"none";
+  if(z==="bereit"&&$("eingabe").value.trim())uebersetze()}
+
+/* ================= TEXT PER FOTO ================= */
+let fotoZweck="preis";
+function textFoto(quelle){fotoZweck="text";if(quelle==="kamera")AndroidTTS.fotoMachen();else AndroidTTS.fotoWaehlen()}
+function textAusZeilen(z){const bl={};z.forEach(x=>{(bl[x.b||0]=bl[x.b||0]||[]).push(x.t.trim())});
+  return Object.keys(bl).map(k=>bl[k].join(" ")).join("\n")}
+function textFotoErgebnis(d){
+  seite("uebersetzer");
+  if(d.bild){$("textBild").src=d.bild;$("textBild").style.display="block"}
+  if(d.fehler||!(d.zeilen||[]).length){$("kiLabel").textContent="⚠️ "+(d.fehler||"Kein Text erkannt")+" – näher ran, gerade halten, gutes Licht.";return}
+  setRichtung("plde");
+  $("eingabe").value=textAusZeilen(d.zeilen);
+  uebersetze();
+  if(!kiVerfuegbar())$("kiLabel").textContent="📖 Wort für Wort – für ganze Sätze das Übersetzungs-Paket laden (siehe unten)";
+}
+
 /* ================= PREISSCHILD AUSWERTEN ================= */
 const EINHEIT=/(\/\s?(kg|l|szt|100\s?g|1\s?kg)|za\s?1|za\s?100|cena\s?(za|jedn)|1\s?kg\s?=|1\s?l\s?=|\bjedn)/i;
 function preiseFinden(zeilen){
@@ -695,11 +738,13 @@ function nameFinden(zeilen){
 }
 
 /* ================= SCAN-ANZEIGE ================= */
-function scanLaeuft(){seite("einkauf");$("scanKarte").style.display="block";$("scanBild").style.display="none";
+function scanLaeuft(){if(fotoZweck==="text"){seite("uebersetzer");$("kiLabel").textContent="🔍 Text wird gelesen …";return}
+  seite("einkauf");$("scanKarte").style.display="block";$("scanBild").style.display="none";
   $("scanInfo").textContent="🔍 Preisschild wird gelesen …";$("scanPreise").innerHTML="";}
-function scanAbbruch(){}
+function scanAbbruch(){fotoZweck="preis"}
 function scanErgebnis(jsonText){
   let d;try{d=JSON.parse(jsonText)}catch(e){d={fehler:"Unbekannter Fehler"}}
+  if(fotoZweck==="text"){fotoZweck="preis";textFotoErgebnis(d);return}
   $("scanKarte").style.display="block";
   if(d.fehler){$("scanInfo").textContent="⚠️ "+d.fehler+". Bitte nochmal versuchen oder selbst eingeben.";return}
   if(d.bild){$("scanBild").src=d.bild;$("scanBild").style.display="block"}
@@ -718,7 +763,9 @@ function scanErgebnis(jsonText){
 function preisWahl(el,w){document.querySelectorAll("#scanPreise button").forEach(b=>b.classList.remove("an"));el.classList.add("an");$("scanPreis").value=zahlFmt(w);scanPreisAnzeigen()}
 function scanUebersetzen(){const n=$("scanName").value.trim();if(!n){$("scanDe").innerHTML="";return}
   // erst Polnisch-Wörterbuch; wenn fast nichts erkannt wird, vielleicht wurde Deutsch eingegeben
-  $("scanDe").innerHTML="🇩🇪 "+wareUebersetzen(n);}
+  $("scanDe").innerHTML="🇩🇪 "+wareUebersetzen(n);
+  if(kiVerfuegbar()){const id=++kiZaehler;window._wareId=id;
+    AndroidTTS.kiUebersetzen(id,n.toLowerCase(),true)}}
 function scanPreisInZl(){const p=parseZahl($("scanPreis").value)||0;return $("scanWaehrung").value==="eur"?p*kurs:p}
 function scanPreisAnzeigen(){const zl=scanPreisInZl(),m=parseZahl($("scanMenge").value)||1;
   if(!zl){$("scanEuro").textContent="";return}

@@ -27,6 +27,7 @@ public class MainActivity extends Activity {
     private long letzterAbruf = 0;
     private long letztesUpdateCheck = 0;
     private static final int FOTO = 41, GALERIE = 42;
+    private KiUebersetzer ki;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +35,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(0xFFC8102E);
 
         tts = new TextToSpeech(this, status -> ttsBereit = (status == TextToSpeech.SUCCESS));
+        ki = new KiUebersetzer(st -> js("window.kiStatus && kiStatus('" + st + "')"));
 
         web = new WebView(this);
         WebSettings s = web.getSettings();
@@ -46,6 +48,7 @@ public class MainActivity extends Activity {
                 seiteGeladen = true;
                 kursHolen(true);
                 updatePruefen(false);
+                ki.vorbereiten(true);   // Sprachpaket automatisch laden, sobald WLAN da ist
             }
         });
         web.addJavascriptInterface(new Sprache(), "AndroidTTS");
@@ -83,6 +86,18 @@ public class MainActivity extends Activity {
                 i.setType("image/*");
                 startActivityForResult(Intent.createChooser(i, "Foto wählen"), GALERIE);
             });
+        }
+
+        @JavascriptInterface
+        public boolean kiBereit() { return ki != null && ki.istBereit(); }
+
+        @JavascriptInterface
+        public void kiLaden() { ki.vorbereiten(false); }   // auch über mobile Daten
+
+        @JavascriptInterface
+        public void kiUebersetzen(int id, String text, boolean vonPolnisch) {
+            ki.uebersetzen(text, vonPolnisch, (ergebnis, ok) ->
+                js("window.kiErgebnis && kiErgebnis(" + id + "," + JSONObject.quote(ergebnis) + "," + ok + ")"));
         }
 
         @JavascriptInterface
