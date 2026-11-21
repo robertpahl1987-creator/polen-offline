@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Sprechblase -->
+    <path android:fillColor="#1F2937" android:pathData="M34,32h40a6,6 0,0 1,6 6v22a6,6 0,0 1,-6 6h-22l-10,9v-9h-8a6,6 0,0 1,-6 -6v-22a6,6 0,0 1,6 -6z"/>
+    <!-- Pfeile hin und her -->
+    <path android:fillColor="#FFFFFF" android:pathData="M42,43h20v-4l8,6l-8,6v-4h-20z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M66,55h-20v4l-8,-6l8,-6v4h20z"/>
+</vector>
