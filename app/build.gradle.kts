@@ -14,6 +14,8 @@ android {
         val run = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toInt()
         versionCode = 100 + run
         versionName = "1.0.$run"
+        // Nur Handy-Prozessoren einpacken (macht die App deutlich kleiner)
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
     // Fester Schlüssel, damit Updates sich über die alte Version installieren lassen
