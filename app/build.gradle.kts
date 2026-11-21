@@ -47,4 +47,6 @@ dependencies {
     implementation("com.google.mlkit:text-recognition:16.0.1")
     // FileProvider für Kamerafotos
     implementation("androidx.core:core:1.13.1")
+    // Kotlin-Bibliotheken auf eine Version bringen (verhindert doppelte Klassen)
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.22"))
 }
