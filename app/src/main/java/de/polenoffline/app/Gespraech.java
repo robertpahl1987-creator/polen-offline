@@ -116,7 +116,8 @@ public class Gespraech {
     /** lautsprecher=true: über den Handy-Lautsprecher ausgeben, auch wenn Kopfhörer verbunden sind. */
     public void sprechen(String text, String lang, boolean lautsprecher) {
         a.runOnUiThread(() -> {
-            Locale loc = lang.toLowerCase().startsWith("pl") ? new Locale("pl", "PL") : Locale.GERMANY;
+            String l = lang.toLowerCase();
+            Locale loc = l.startsWith("pl") ? new Locale("pl", "PL") : l.startsWith("en") ? Locale.UK : Locale.GERMANY;
             tts.setLanguage(loc);
             tts.setSpeechRate(0.95f);
             AudioDeviceInfo lsp = lautsprecher ? lautsprecherWennKopfhoerer() : null;

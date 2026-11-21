@@ -69,11 +69,12 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String speak(String text, String lang) {
             if (!ttsBereit) return "nicht_bereit";
-            Locale loc = lang.toLowerCase().startsWith("pl") ? new Locale("pl", "PL") : Locale.GERMANY;
+            String l = lang.toLowerCase();
+            Locale loc = l.startsWith("pl") ? new Locale("pl", "PL") : l.startsWith("en") ? Locale.UK : Locale.GERMANY;
             int r = tts.setLanguage(loc);
             if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
                 runOnUiThread(() -> Toast.makeText(MainActivity.this,
-                    "Polnische Sprachdaten fehlen. Einstellungen → Sprachausgabe → Polnisch herunterladen.",
+                    "Sprachdaten fehlen. Einstellungen → Sprachausgabe → Sprache herunterladen.",
                     Toast.LENGTH_LONG).show());
                 return "fehlt";
             }
@@ -136,6 +137,12 @@ public class MainActivity extends Activity {
                 try { startActivity(new Intent("com.android.settings.TTS_SETTINGS")); }
                 catch (Exception e) { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); }
             });
+        }
+
+        @JavascriptInterface
+        public void kiUebersetzen2(int id, String text, String von, String nach) {
+            ki.uebersetzen(text, von, nach, (ergebnis, ok) ->
+                js("window.kiErgebnis && kiErgebnis(" + id + "," + JSONObject.quote(ergebnis) + "," + ok + ")"));
         }
 
         @JavascriptInterface

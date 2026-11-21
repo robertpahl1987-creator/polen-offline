@@ -8,6 +8,8 @@ import com.google.mlkit.nl.translate.TranslateRemoteModel;
 import com.google.mlkit.nl.translate.Translation;
 import com.google.mlkit.nl.translate.Translator;
 import com.google.mlkit.nl.translate.TranslatorOptions;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -21,6 +23,7 @@ public class KiUebersetzer {
     private final Translator plDe, dePl;
     private volatile boolean bereit = false, laedt = false;
     private final Meldung meldung;
+    private final Map<String, Translator> paare = new HashMap<>();
 
     public KiUebersetzer(Meldung m) {
         meldung = m;
@@ -61,10 +64,29 @@ public class KiUebersetzer {
             .addOnFailureListener(e -> { laedt = false; meldung.status(nurWlan ? "wartet_wlan" : "fehler"); });
     }
 
-    /** Übersetzt Zeile für Zeile (behält Absätze bei). */
+    private static String code(String k) {
+        switch (k) { case "pl": return TranslateLanguage.POLISH; case "en": return TranslateLanguage.ENGLISH; default: return TranslateLanguage.GERMAN; }
+    }
+
+    private synchronized Translator paar(String von, String nach) {
+        String key = von + ">" + nach;
+        Translator t = paare.get(key);
+        if (t == null) {
+            t = Translation.getClient(new TranslatorOptions.Builder()
+                    .setSourceLanguage(code(von)).setTargetLanguage(code(nach)).build());
+            paare.put(key, t);
+        }
+        return t;
+    }
+
     public void uebersetzen(String text, boolean vonPolnisch, Antwort a) {
+        uebersetzen(text, vonPolnisch ? "pl" : "de", vonPolnisch ? "de" : "pl", a);
+    }
+
+    /** Übersetzt Zeile für Zeile (behält Absätze bei). Sprachen: "de", "pl", "en" (Englisch ist immer eingebaut). */
+    public void uebersetzen(String text, String von, String nach, Antwort a) {
         if (!bereit) { a.fertig("", false); return; }
-        Translator t = vonPolnisch ? plDe : dePl;
+        Translator t = paar(von, nach);
         new Thread(() -> {
             try {
                 StringBuilder sb = new StringBuilder();

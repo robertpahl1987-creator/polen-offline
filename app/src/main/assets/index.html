@@ -87,6 +87,7 @@ nav button.an{color:var(--rot);font-weight:700}
 .mic.pl{background:#1f2937}
 .mic.an{animation:puls 1s infinite}
 @keyframes puls{50%{opacity:.6}}
+.sprwahl button{flex:1;font-weight:600}
 .schalter{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--linie);font-size:15px}
 .schalter input{width:auto;transform:scale(1.4)}
 .summe{background:var(--rot);color:#fff;border-radius:14px;padding:14px;margin-bottom:12px}
@@ -104,9 +105,10 @@ nav button.an{color:var(--rot);font-weight:700}
 <!-- ÜBERSETZER -->
 <section class="seite aktiv" id="s-uebersetzer">
   <div class="karte">
+    <div class="chips sprwahl" style="margin-bottom:8px"><button data-f="pl" onclick="setFremd('pl')">🇵🇱 Polnisch</button><button data-f="en" onclick="setFremd('en')">🇬🇧 Englisch</button></div>
     <div class="richtung">
-      <button id="r-depl" class="an" onclick="setRichtung('depl')">Deutsch → Polnisch</button>
-      <button id="r-plde" onclick="setRichtung('plde')">Polnisch → Deutsch</button>
+      <button id="r-depl" class="an" onclick="setRichtung('depl')">Deutsch → <span class="fName">Polnisch</span></button>
+      <button id="r-plde" onclick="setRichtung('plde')"><span class="fName">Polnisch</span> → Deutsch</button>
     </div>
     <div class="reihe nurApp" style="margin-bottom:10px">
       <button class="btn" onclick="textFoto('kamera')">📷 Text fotografieren</button>
@@ -118,7 +120,7 @@ nav button.an{color:var(--rot);font-weight:700}
     <div class="ausgabe" id="ausgabe" style="white-space:pre-wrap"></div>
     <div class="hinweis" id="ausgabeAus"></div>
     <div class="reihe" style="margin-top:10px">
-      <button class="btn2" onclick="vorlesen(document.getElementById('ausgabe').innerText, richtung==='depl'?'pl-PL':'de-DE')">🔊 Vorlesen</button>
+      <button class="btn2" onclick="vorlesen(document.getElementById('ausgabe').innerText, richtung==='depl'?FL():'de-DE')">🔊 Vorlesen</button>
       <button class="btn2" onclick="zeigeGross(document.getElementById('ausgabe').innerText, document.getElementById('eingabe').value)">⛶ Groß zeigen</button>
       <button class="btn2" onclick="document.getElementById('eingabe').value='';uebersetze()">✕ Leeren</button>
     </div>
@@ -139,6 +141,7 @@ nav button.an{color:var(--rot);font-weight:700}
 <section class="seite" id="s-gespraech">
   <div class="karte">
     <h2>🎧 Gesprächsmodus</h2>
+    <div class="chips sprwahl" style="margin-bottom:8px"><button data-f="pl" onclick="setFremd('pl')">🇵🇱 Polnisch</button><button data-f="en" onclick="setFremd('en')">🇬🇧 Englisch</button></div>
     <div class="hinweis" id="gStatus" style="font-size:15px;font-weight:600">Tippe auf einen Knopf und sprich.</div>
     <div class="hinweis" id="gTeil" style="font-size:16px;font-style:italic"></div>
   </div>
@@ -146,18 +149,18 @@ nav button.an{color:var(--rot);font-weight:700}
   <div class="karte">
     <h2>⚙️ Einstellungen</h2>
     <label class="schalter">🎧 Live: dem Gegenüber dauerhaft zuhören<input type="checkbox" id="gLive" onchange="liveUmschalten()"></label>
-    <label class="schalter">🔊 Meine Übersetzung laut vorlesen (Polnisch)<input type="checkbox" id="gVorIch" checked onchange="gEinst()"></label>
+    <label class="schalter">🔊 Meine Übersetzung laut vorlesen (<span class="fName">Polnisch</span>)<input type="checkbox" id="gVorIch" checked onchange="gEinst()"></label>
     <label class="schalter">🎧 Übersetzung vom Gegenüber vorlesen (Deutsch)<input type="checkbox" id="gVorEr" checked onchange="gEinst()"></label>
-    <label class="schalter">📢 Polnisch über Handy-Lautsprecher, wenn Kopfhörer dran sind<input type="checkbox" id="gLsp" checked onchange="gEinst()"></label>
+    <label class="schalter">📢 <span class="fName">Polnisch</span> über Handy-Lautsprecher, wenn Kopfhörer dran sind<input type="checkbox" id="gLsp" checked onchange="gEinst()"></label>
     <div class="hinweis" style="margin-top:8px">
-      <b>So funktioniert's mit Kopfhörer:</b> Du hörst die deutsche Übersetzung im Ohr, dein Gegenüber hört deine Antwort auf Polnisch aus dem Handy-Lautsprecher. Das Handy-Mikrofon nimmt beide auf – halte es zwischen euch.<br><br>
-      <b>Ohne Internet:</b> Die Spracherkennung braucht dafür die Offline-Sprachpakete für <b>Polnisch</b> und <b>Deutsch</b>: Google-App öffnen → Profilbild → Einstellungen → Sprache &amp; Sprache­eingabe (bzw. „Offline-Spracherkennung“) → Polnisch und Deutsch herunterladen. Die Übersetzung braucht das Übersetzungs-Paket (siehe „Übersetzen“).
+      <b>So funktioniert's mit Kopfhörer:</b> Du hörst die deutsche Übersetzung im Ohr, dein Gegenüber hört deine Antwort auf <span class="fName">Polnisch</span> aus dem Handy-Lautsprecher. Das Handy-Mikrofon nimmt beide auf – halte es zwischen euch.<br><br>
+      <b>Ohne Internet:</b> Die Spracherkennung braucht dafür die Offline-Sprachpakete für <b>Polnisch</b>, <b>Englisch</b> und <b>Deutsch</b>: Google-App öffnen → Profilbild → Einstellungen → Sprache &amp; Sprache­eingabe (bzw. „Offline-Spracherkennung“) → die gewünschten Sprachen herunterladen. Die Übersetzung braucht das Übersetzungs-Paket (siehe „Übersetzen“).
     </div>
     <button class="btn2" style="margin-top:8px" onclick="gChatLeeren()">🗑️ Gespräch löschen</button>
   </div>
   <div class="mics">
     <button class="mic" id="micDe" onclick="micDruck('de-DE')">🇩🇪 Ich spreche</button>
-    <button class="mic pl" id="micPl" onclick="micDruck('pl-PL')">🇵🇱 Pan/Pani mówi</button>
+    <button class="mic pl" id="micPl" onclick="micDruck(FL())">🇵🇱 Pan/Pani mówi</button>
   </div>
 </section>
 
@@ -590,13 +593,17 @@ ALLE.forEach(s=>{const d=norm(s.de.replace(/…/g,"")),p=norm(s.pl.replace(/…/
 /* ================= ÜBERSETZER ================= */
 let richtung="depl";
 function setRichtung(r){richtung=r;$("r-depl").classList.toggle("an",r==="depl");$("r-plde").classList.toggle("an",r==="plde");
-  $("eingabe").placeholder=r==="depl"?"Text eingeben, z. B. „Wo ist der Bahnhof?“":"Polnischen Text eingeben, z. B. „Ile to kosztuje?“";uebersetze()}
+  $("eingabe").placeholder=r==="depl"?"Text eingeben, z. B. „Wo ist der Bahnhof?“":(fremd==="en"?"Englischen Text eingeben, z. B. „Where is the station?“":"Polnischen Text eingeben, z. B. „Ile to kosztuje?“");uebersetze()}
 function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
 function uebersetze(){
   const roh=$("eingabe").value,txt=norm(roh);
   const phr=richtung==="depl"?PHR_DE:PHR_PL, wb=richtung==="depl"?DE_PL:PL_DE;
   $("ausgabeAus").textContent="";$("kiLabel").textContent="";
   if(!txt){$("ausgabe").innerHTML="";$("vorschlaege").innerHTML="";$("textBild").style.display="none";return}
+  if(fremd==="en"){$("vorschlaege").innerHTML="";
+    if(kiVerfuegbar()){$("kiLabel").textContent="🧠 Übersetze …";kiAnfrage(roh)}
+    else{$("ausgabe").innerHTML="";$("kiLabel").textContent="⚠️ Für Englisch wird das Übersetzungs-Paket gebraucht (Knopf unten)."}
+    return}
   // 1) Ganzer Satz
   if(phr[txt]){$("kiLabel").textContent="📗 Aus dem Sprachführer";$("ausgabe").textContent=phr[txt];
     if(richtung==="depl"){const s=ALLE.find(x=>norm(x.de.replace(/…/g,""))===txt);if(s)$("ausgabeAus").textContent="Aussprache: "+s.aus}
@@ -713,10 +720,10 @@ function wareUebersetzen(txt){
 let kiZaehler=0,kiTimer=null,kiZustand="";
 const kiVerfuegbar=()=>window.AndroidTTS&&AndroidTTS.kiBereit&&AndroidTTS.kiBereit();
 function kiAnfrage(text){clearTimeout(kiTimer);const id=++kiZaehler;
-  kiTimer=setTimeout(()=>AndroidTTS.kiUebersetzen(id,text,richtung==="plde"),350)}
+  kiTimer=setTimeout(()=>{const [v,n]=richtung==="plde"?[fremd,"de"]:["de",fremd];AndroidTTS.kiUebersetzen2(id,text,v,n)},350)}
 function kiErgebnis(id,text,ok){
   if(gIds[id]){const g=gIds[id];delete gIds[id];
-    gUebersetzt(g.b,g.ich,ok&&text.trim()?text:wortFuerWort(g.b.querySelector("small").textContent.replace(/^.*?:\s/,""),g.ich?"depl":"plde"));return}
+    gUebersetzt(g.b,g.ich,ok&&text.trim()?text:fremd==="en"?"(Übersetzung fehlgeschlagen)":wortFuerWort(g.b.querySelector("small").textContent.replace(/^.*?:\s/,""),g.ich?"depl":"plde"));return}
   if(id===window._wareId){if(ok&&text.trim())$("scanDe").textContent="🇩🇪 "+text;return}
   if(id!==kiZaehler)return;   // nur die neueste Anfrage anzeigen
   if(ok&&text.trim()){$("ausgabe").textContent=text;$("kiLabel").textContent="🧠 Satz-Übersetzung (offline)"}
@@ -735,20 +742,20 @@ let gHoert=null,gSpricht=false,gIds={};
 const gE=laden("gEinst",{vorIch:true,vorEr:true,lsp:true});
 function gEinst(){gE.vorIch=$("gVorIch").checked;gE.vorEr=$("gVorEr").checked;gE.lsp=$("gLsp").checked;speicher("gEinst",gE)}
 function gStatus(t){$("gStatus").textContent=t}
-function micAnzeige(){$("micDe").classList.toggle("an",gHoert==="de-DE");$("micPl").classList.toggle("an",gHoert==="pl-PL");
-  $("micDe").textContent=gHoert==="de-DE"?"⏹ Stopp":"🇩🇪 Ich spreche";$("micPl").textContent=gHoert==="pl-PL"?"⏹ Stopp":"🇵🇱 Pan/Pani mówi"}
+function micAnzeige(){$("micDe").classList.toggle("an",gHoert==="de-DE");$("micPl").classList.toggle("an",gHoert===FL());
+  $("micDe").textContent=gHoert==="de-DE"?"⏹ Stopp":"🇩🇪 Ich spreche";$("micPl").textContent=gHoert===FL()?"⏹ Stopp":(fremd==="en"?"🇬🇧 They speak":"🇵🇱 Pan/Pani mówi")}
 function micDruck(lang){
-  if(gHoert===lang){AndroidTTS.hoerenStopp();gHoert=null;micAnzeige();gStatus("Gestoppt.");if(lang==="pl-PL"&&$("gLive").checked){$("gLive").checked=false}return}
+  if(gHoert===lang){AndroidTTS.hoerenStopp();gHoert=null;micAnzeige();gStatus("Gestoppt.");if(lang===FL()&&$("gLive").checked){$("gLive").checked=false}return}
   if(!kiVerfuegbar())gStatus("⚠️ Übersetzungs-Paket fehlt – es wird nur Wort für Wort übersetzt. (Laden unter „Übersetzen“)");
   starteHoeren(lang)}
 function starteHoeren(lang){gHoert=lang;micAnzeige();$("gTeil").textContent="";
-  gStatus(lang==="de-DE"?"🎙️ Sprich jetzt Deutsch …":"🎙️ Słucham… (Gegenüber spricht Polnisch)");AndroidTTS.hoeren(lang)}
+  gStatus(lang==="de-DE"?"🎙️ Sprich jetzt Deutsch …":(fremd==="en"?"🎙️ Listening… (Gegenüber spricht Englisch)":"🎙️ Słucham… (Gegenüber spricht Polnisch)"));AndroidTTS.hoeren(lang)}
 function hoerStatus(z){if(z==="spricht")gStatus("🎙️ Höre zu …");if(z==="denkt")gStatus("⏳ Erkenne …")}
 function hoerTeil(t){$("gTeil").textContent="„"+t+"“"}
 function hoerFehler(art){const war=gHoert;gHoert=null;micAnzeige();$("gTeil").textContent="";
-  if(art==="nichts"){if($("gLive").checked&&!gSpricht){setTimeout(()=>{if($("gLive").checked&&!gHoert&&!gSpricht)starteHoeren("pl-PL")},300);return}
+  if(art==="nichts"){if($("gLive").checked&&!gSpricht){setTimeout(()=>{if($("gLive").checked&&!gHoert&&!gSpricht)starteHoeren(FL())},300);return}
     gStatus("Nichts verstanden – nochmal tippen.");return}
-  const m={offline_paket:"⚠️ Spracherkennung ohne Internet nicht verfügbar – bitte die Offline-Sprachpakete (Polnisch & Deutsch) installieren (siehe unten).",
+  const m={offline_paket:"⚠️ Spracherkennung ohne Internet nicht verfügbar – bitte die Offline-Sprachpakete (Deutsch & "+(fremd==="en"?"Englisch":"Polnisch")+") installieren (siehe unten).",
     mikrofon:"⚠️ Bitte das Mikrofon für die App erlauben.",belegt:"⚠️ Spracherkennung ist gerade belegt – kurz warten.",
     keine_erkennung:"⚠️ Auf diesem Handy ist keine Spracherkennung installiert (Google-App nötig).",tts:"⚠️ Sprachausgabe startet noch – gleich nochmal."};
   gStatus(m[art]||"⚠️ Fehler bei der Spracherkennung ("+art+").");
@@ -757,23 +764,34 @@ function hoerFehler(art){const war=gHoert;gHoert=null;micAnzeige();$("gTeil").te
 function hoerErgebnis(text,lang){gHoert=null;micAnzeige();$("gTeil").textContent="";
   const ich=lang==="de-DE";$("gLeer")&&$("gLeer").remove();
   const b=document.createElement("div");b.className="blase"+(ich?" ich":"");
-  b.innerHTML=`<small>${ich?"🇩🇪 Ich":"🇵🇱 Gegenüber"}: ${esc(text)}</small><b>…</b>`;$("gChat").appendChild(b);b.scrollIntoView({behavior:"smooth",block:"end"});
+  b.innerHTML=`<small>${ich?"🇩🇪 Ich":(fremd==="en"?"🇬🇧":"🇵🇱")+" Gegenüber"}: ${esc(text)}</small><b>…</b>`;$("gChat").appendChild(b);b.scrollIntoView({behavior:"smooth",block:"end"});
   gStatus("🧠 Übersetze …");
-  if(kiVerfuegbar()){const id=++kiZaehler;gIds[id]={b,ich};AndroidTTS.kiUebersetzen(id,text,!ich)}
-  else gUebersetzt(b,ich,wortFuerWort(text,ich?"depl":"plde"))}
+  if(kiVerfuegbar()){const id=++kiZaehler;gIds[id]={b,ich};AndroidTTS.kiUebersetzen2(id,text,ich?"de":fremd,ich?fremd:"de")}
+  else gUebersetzt(b,ich,fremd==="en"?"(Übersetzungs-Paket fehlt)":wortFuerWort(text,ich?"depl":"plde"))}
 function gUebersetzt(b,ich,t){
-  b.querySelector("b").textContent=(ich?"🇵🇱 ":"🇩🇪 ")+t;b.onclick=()=>zeigeGross(t,b.querySelector("small").textContent);
+  b.querySelector("b").textContent=(ich?(fremd==="en"?"🇬🇧 ":"🇵🇱 "):"🇩🇪 ")+t;b.onclick=()=>zeigeGross(t,b.querySelector("small").textContent);
   const vor=ich?gE.vorIch:gE.vorEr;
-  if(vor){gSpricht=true;gStatus(ich?"🔊 Spreche Polnisch …":"🎧 Spreche Deutsch …");AndroidTTS.sprechen(t,ich?"pl-PL":"de-DE",ich&&gE.lsp)}
+  if(vor){gSpricht=true;gStatus(ich?"🔊 Spreche "+(fremd==="en"?"Englisch":"Polnisch")+" …":"🎧 Spreche Deutsch …");AndroidTTS.sprechen(t,ich?FL():"de-DE",ich&&gE.lsp)}
   else sprechenFertig()}
 function sprechenFertig(){gSpricht=false;
-  if($("gLive").checked&&!gHoert){starteHoeren("pl-PL")}else if(!gHoert)gStatus("Tippe auf einen Knopf und sprich.")}
-function liveUmschalten(){if($("gLive").checked){if(!gHoert&&!gSpricht)starteHoeren("pl-PL")}else if(gHoert==="pl-PL"){AndroidTTS.hoerenStopp();gHoert=null;micAnzeige();gStatus("Live aus.")}}
+  if($("gLive").checked&&!gHoert){starteHoeren(FL())}else if(!gHoert)gStatus("Tippe auf einen Knopf und sprich.")}
+function liveUmschalten(){if($("gLive").checked){if(!gHoert&&!gSpricht)starteHoeren(FL())}else if(gHoert===FL()){AndroidTTS.hoerenStopp();gHoert=null;micAnzeige();gStatus("Live aus.")}}
 function gespraechPause(){if(gHoert){gHoert=null;micAnzeige();gStatus("Pausiert – tippe zum Weitermachen.")}$("gLive").checked=false}
 function gChatLeeren(){$("gChat").innerHTML='<div class="leer" id="gLeer">Gespräch gelöscht.</div>'}
 function wortFuerWort(txt,r){const phr=r==="depl"?PHR_DE:PHR_PL,wb=r==="depl"?DE_PL:PL_DE,n=norm(txt);if(phr[n])return phr[n];
   return n.split(" ").map(w=>phr[w]||(wb[w]!==undefined?wb[w]:w)).filter(Boolean).join(" ")}
+setTimeout(()=>setFremd(fremd),0);
 $("gVorIch").checked=gE.vorIch;$("gVorEr").checked=gE.vorEr;$("gLsp").checked=gE.lsp;
+
+
+/* ================= FREMDSPRACHE: Polnisch oder Englisch ================= */
+let fremd=laden("fremd","pl");
+const FL=()=>fremd==="en"?"en-GB":"pl-PL";
+function setFremd(f){fremd=f;speicher("fremd",f);
+  document.querySelectorAll(".sprwahl button").forEach(b=>b.classList.toggle("an",b.dataset.f===f));
+  document.querySelectorAll(".fName").forEach(e=>e.textContent=f==="en"?"Englisch":"Polnisch");
+  if(gHoert){AndroidTTS.hoerenStopp();gHoert=null}
+  micAnzeige();setRichtung(richtung)}
 
 /* ================= TEXT PER FOTO ================= */
 let fotoZweck="preis";
@@ -784,8 +802,8 @@ function textFotoErgebnis(d){
   seite("uebersetzer");
   if(d.bild){$("textBild").src=d.bild;$("textBild").style.display="block"}
   if(d.fehler||!(d.zeilen||[]).length){$("kiLabel").textContent="⚠️ "+(d.fehler||"Kein Text erkannt")+" – näher ran, gerade halten, gutes Licht.";return}
-  setRichtung("plde");
   $("eingabe").value=textAusZeilen(d.zeilen);
+  setRichtung("plde");
   uebersetze();
   if(!kiVerfuegbar())$("kiLabel").textContent="📖 Wort für Wort – für ganze Sätze das Übersetzungs-Paket laden (siehe unten)";
 }
